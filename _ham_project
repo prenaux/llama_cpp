@@ -1,0 +1,28 @@
+#!/bin/bash
+if [[ -z $HAM_PROJECT_DIR ]]; then
+    echo "E/HAM_PROJECT_DIR not set !"
+    return 1
+fi
+
+BUILD_TARGET=${BUILD_TARGET:-$HAM_BIN_LOA}
+CPP_TOOLSET=$(ham-cppm-get-toolset "${BUILD_TARGET}")
+retcheck $? "Can't get C++ toolset for BUILD_TARGET '$BUILD_TARGET'." || return 1
+
+toolset_import_list repos rclone python_3 "$CPP_TOOLSET" || return 1
+
+if [ -d "./data" ]; then
+  if [ ! -L "./data" ] || [ "$(readlink -f ./data)" != "$(readlink -f ./models)" ]; then
+    echo "E/'./data' exists but is not a symbolic link to './models'"
+    return 1
+  fi
+else
+  echo "I/data doesnt existing, symlinking 'models'."
+  ln -s ./models ./data
+fi
+
+if [ ! -f "./rclone.conf" ]; then
+  cp ./rclone.conf.tpl ./rclone.conf
+  echo "I/Copied rclone.conf.tpl to rclone.conf, you must edit the passwords in it to be able to sync resources."
+fi
+
+pathenv_add "$HAM_PROJECT_DIR/bin"
