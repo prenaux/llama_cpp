@@ -133,3 +133,9 @@ poetry.toml
 
 # Test models for lora adapters
 /lora-tests
+
+# data/ is a symlink to models to work with ham-sync-resources
+# (at the bottom to reduce rebase conflicts)
+data
+!models/_sync_data
+rclone.conf
