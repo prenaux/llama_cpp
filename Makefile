@@ -972,10 +972,12 @@ include scripts/get-flags.mk
 CUDA_CXXFLAGS := $(BASE_CXXFLAGS) $(GF_CXXFLAGS) -Wno-pedantic
 endif
 
-ifdef LLAMA_CURL
+# NOTE: Pierre: I always want curl, fail to link if you cant find it is fine.
+# TODO: Ideally we'd add a _build.ham build script so we can just link with
+#       niCURL that'll have that multiplatform.  ifdef LLAMA_CURL
 override CXXFLAGS := $(CXXFLAGS) -DLLAMA_USE_CURL
 override LDFLAGS  := $(LDFLAGS) -lcurl
-endif
+# endif
 
 #
 # Print build information
