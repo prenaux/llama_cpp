@@ -7,6 +7,27 @@
 
 #import <Metal/Metal.h>
 
+static id<MTLDevice> ggml_backend_metal_pick_best_device(uint64_t* apDeviceMemorySize) {
+  NSArray* devices = MTLCopyAllDevices();
+  id<MTLDevice> bestDevice = nil;
+  uint64_t maxMemorySize = 0;
+
+  for (id<MTLDevice> device in devices) {
+    uint64_t memorySize = [device recommendedMaxWorkingSetSize];
+    if (bestDevice == nil || memorySize > maxMemorySize) {
+      maxMemorySize = memorySize;
+      bestDevice = device;
+    }
+  }
+
+  [devices release]; // since it was created by a *Copy* C method
+
+  if (apDeviceMemorySize) {
+      *apDeviceMemorySize = maxMemorySize;
+  }
+  return bestDevice;
+}
+
 #undef MIN
 #undef MAX
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -307,17 +328,25 @@ static struct ggml_backend_metal_context * ggml_metal_init(int n_cb) {
     GGML_METAL_LOG_INFO("%s: allocating\n", __func__);
 
 #if TARGET_OS_OSX && !GGML_METAL_NDEBUG
-    // Show all the Metal device instances in the system
-    NSArray * devices = MTLCopyAllDevices();
-    for (id<MTLDevice> device in devices) {
-        GGML_METAL_LOG_INFO("%s: found device: %s\n", __func__, [[device name] UTF8String]);
+    {
+        // Show all the Metal device instances in the system
+        NSArray * devices = MTLCopyAllDevices();
+        for (id<MTLDevice> device in devices) {
+            GGML_METAL_LOG_INFO("%s: found device: %s\n", __func__, [[device name] UTF8String]);
+        }
+        [devices release]; // since it was created by a *Copy* C method
     }
-    [devices release]; // since it was created by a *Copy* C method
 #endif
 
+#if 1 // Change to 0 to revert to default device
+    uint64_t deviceMemSize = 0;
+    id<MTLDevice> device = ggml_backend_metal_pick_best_device(&deviceMemSize);
+    GGML_METAL_LOG_INFO("%s: picking best device: %s, memsize: %lluKB\n", __func__, [[device name] UTF8String], deviceMemSize/1024);
+#else
     // Pick and show default Metal device
     id<MTLDevice> device = MTLCreateSystemDefaultDevice();
     GGML_METAL_LOG_INFO("%s: picking default device: %s\n", __func__, [[device name] UTF8String]);
+#endif
 
     // Configure context
     struct ggml_backend_metal_context * ctx = calloc(1, sizeof(struct ggml_backend_metal_context));
@@ -3084,7 +3113,7 @@ static int g_backend_device_ref_count = 0;
 
 static id<MTLDevice> ggml_backend_metal_get_device(void) {
     if (g_backend_device == nil) {
-        g_backend_device = MTLCreateSystemDefaultDevice();
+        g_backend_device = ggml_backend_metal_pick_best_device(nil);
     }
 
     g_backend_device_ref_count++;
