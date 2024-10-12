@@ -3,6 +3,22 @@
 This includes notes about the changes I made to the repos and how to use it
 with ham.
 
+## Download & build the repo
+
+```bash
+# build this repo
+git clone git@github.com:prenaux/llama_cpp.git
+cd llama_cpp
+. hat
+./_build_all.sh
+```
+
+## Run with a hugging face model
+
+```bash
+./llama-cli --hf-repo kaetemi/Meta-Llama-3.1-8B-Q4_0-GGUF --hf-file meta-llama-3.1-8b-q4_0.gguf -p "The meaning to life and the universe is"
+```
+
 ## Typical run
 
 Here is a typical run using LLaMA-7B:
@@ -94,15 +110,6 @@ main:    total time = 34036.74 ms
 And here is another demo of running both LLaMA-7B and [whisper.cpp](https://github.com/ggerganov/whisper.cpp) on a single M1 Pro MacBook:
 
 https://user-images.githubusercontent.com/1991296/224442907-7693d4be-acaa-4e01-8b4f-add84093ffff.mp4
-
-## Download & build the repo
-
-```bash
-# build this repo
-git clone git@github.com:prenaux/llama.cpp.git
-cd llama_cpp
-make -j
-```
 
 ## Usage with `_sync_data`
 
