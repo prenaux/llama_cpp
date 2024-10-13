@@ -9,13 +9,24 @@ cd "$SCRIPT_DIR"
 log_info "Build..."
 case $HAM_OS in
     LINUX)
+        (
+            set -x
+            make -j
+        )
+
+        # Vulkan build, experimental. Works only with very small models?
+        # (
+        #    set -x
+        #    make -j GGML_VULKAN=1
+        # )
+
         # GGML_HIPBLAS requires ROCm to be installed (see build.md)
         # gfx1030 is for the RX 6900 XT (cf https://llvm.org/docs/AMDGPUUsage.html#processors)
         # https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/install-overview.html
-        (
-            set -x
-            make -j GGML_HIPBLAS=1 GGML_HIP_UMA=1 AMDGPU_TARGETS=gfx1030
-        )
+        # (
+            # set -x
+            # make -j GGML_HIPBLAS=1 GGML_HIP_UMA=1 AMDGPU_TARGETS=gfx1030
+        # )
         ;;
     *)
         (
